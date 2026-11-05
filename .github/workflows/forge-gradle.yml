@@ -1,0 +1,26 @@
+# Forged workflow impersonating "SDK Gradle Build and Dependencies".
+name: SDK Gradle Build and Dependencies
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  forge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build a dependency-graph artifact
+        run: |
+          mkdir -p dependency-graph-reports
+          cat > dependency-graph-reports/poc.json <<'JSON'
+          {"version":1,"sha":"0000000000000000000000000000000000000000","ref":"refs/heads/main","job":{"id":"poc","correlator":"poc"},"detector":{"name":"poc","version":"1","url":"https://example.invalid"},"scanned":"2026-11-05T00:00:00Z","manifests":{"package.json":{"name":"poc","resolved":{}}}}
+          JSON
+          echo marker > keep.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dependency-graph_poc.json
+          path: |
+            dependency-graph-reports/poc.json
+            keep.txt
+          retention-days: 1
